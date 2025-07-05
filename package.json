@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "npx prisma generate && npx prisma migrate deploy && next build",
+    "build": "npx prisma generate && next build",
     "start": "node .next/standalone/server.js",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts"
