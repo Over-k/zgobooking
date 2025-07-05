@@ -1,0 +1,611 @@
+// This is your Prisma schema file.
+// Learn more about it here: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // You can change this to your preferred database
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL") // optional, only needed if no CREATEDB permission
+}
+
+model User {
+  id             String           @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String           @unique
+  phone          String?
+  profileImage   String
+  bio            String?
+  city           String?
+  country        String?
+  joinDate       DateTime
+  dateOfBirth    DateTime?
+  isHost         Boolean          @default(false)
+  isAdmin        Boolean          @default(false)
+  isVerified     Boolean          @default(false)
+  isActive       Boolean          @default(true)
+  emailVerified  Boolean          @default(false)
+  phoneVerified  Boolean          @default(false)
+  governmentIdVerified Boolean    @default(false)
+  identityVerified     Boolean    @default(false)
+  
+  // Relations   
+  hostInfo       HostInfo? 
+  paymentMethods PaymentMethod[]
+  wishlists      Wishlist[]
+  favorites      Favorite[]
+  reviewsGiven   Review[]         @relation("ReviewAuthor")
+  reviewsReceived Review[]        @relation("ReviewReceiver")
+  notifications  Notification[]
+  messagesSent   Message[]        @relation("MessageSender")
+  messagesReceived Message[]      @relation("MessageRecipient")
+  threadParticipations MessageThreadParticipant[]
+  guestBookings  Booking[]        @relation("GuestBooking")
+  hostBookings   Booking[]        @relation("HostBooking")
+  listings       Listing[]        @relation("ListingOwner")
+  securitySettings SecuritySettings?
+  accountSettings AccountSettings?
+  notificationPreferences NotificationPreferences?
+  loginHistory   LoginHistory[]
+  hostRequests   HostRequest[]
+  reviewedRequests HostRequest[] @relation("HostRequestReviewer")
+  apiLogs        ApiLog[]
+
+  @@map("users")
+}
+
+model Verification {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+
+  @@map("verifications")
+}
+
+model SecuritySettings {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String
+  passwordSalt    String
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  twoFactorEnabled Boolean       @default(false)
+  twoFactorSecret  String?
+  lastPasswordChange DateTime    @default(now())
+  failedLoginAttempts Int        @default(0)
+  accountLocked   Boolean        @default(false)
+  accountLockedUntil DateTime?
+  emailVerifiedAt DateTime?      
+  userId           String   @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  loginHistory    LoginHistory[]
+
+  @@map("security_settings")
+}
+
+model LoginHistory {
+  id              String         @id @default(uuid())
+  date            DateTime
+  location        String
+  device          String
+  
+  // Relations
+  securitySettingsId String
+  securitySettings SecuritySettings @relation(fields: [securitySettingsId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("login_history")
+}
+
+model NotificationPreferences {
+  id                 String      @id @default(uuid())
+  
+  // Email preferences
+  emailMarketing     Boolean     @default(true)
+  emailAccountUpdates Boolean    @default(true)
+  emailBookingReminders Boolean  @default(true)
+  emailNewMessages   Boolean     @default(true)
+  
+  // Push preferences
+  pushMarketing      Boolean     @default(true)
+  pushAccountUpdates Boolean     @default(true)
+  pushBookingReminders Boolean   @default(true)
+  pushNewMessages    Boolean     @default(true)
+  
+  // SMS preferences
+  smsMarketing       Boolean     @default(false)
+  smsAccountUpdates  Boolean     @default(true)
+  smsBookingReminders Boolean    @default(true)
+  smsNewMessages     Boolean     @default(true)
+  
+  // Relations
+  userId             String      @unique
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model AccountSettings {
+  id                String      @id @default(uuid())
+  language          String      @default("en")
+  currency          String      @default("USD")
+  timezone          String      @default("UTC")
+  showProfile       Boolean     @default(true)
+  shareActivity     Boolean     @default(true)
+  allowMarketingEmails Boolean  @default(true)
+  
+  // Relations
+  userId            String      @unique
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("account_settings")
+}
+
+model PaymentMethod {
+  id                String      @id @default(uuid())
+  type              String      // credit_card, paypal, bank_account
+  name              String
+  lastFour          String?
+  expiryDate        DateTime?
+  cardType          String?
+  cardholderName    String?
+  expiryMonth       Int?
+  expiryYear        Int?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  isDefault         Boolean     @default(false)
+  
+  // Relations
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  bookings          Booking[]
+
+  @@map("payment_methods")
+}
+
+model HostInfo {
+  id                String      @id @default(uuid())
+  superhost         Boolean     @default(false)
+  responseRate      Float
+  responseTime      String
+  acceptanceRate    Float
+  hostSince         DateTime
+  languages         String[]
+  totalReviews      Int         @default(0)
+  averageRating     Float       @default(0)
+  
+  // Relations
+  userId            String      @unique
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("host_info")
+}
+
+model Wishlist {
+  id                String      @id @default(uuid())
+  name              String
+  description       String?
+  coverImageId      String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  isPrivate         Boolean     @default(false)
+  isDefault         Boolean     @default(false)
+  shareableLink     String?     @unique
+  
+  // Relations
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listingConnections WishlistListing[]
+
+  @@map("wishlists")
+}
+
+model Favorite {
+  id                String      @id @default(uuid())
+  createdAt         DateTime    @default(now())
+  
+  // Relations
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  wishlistConnections WishlistListing[]
+
+  @@unique([userId, listingId])
+  @@map("favorites")
+}
+
+model WishlistListing {
+  wishlistId        String
+  wishlist          Wishlist    @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  favoriteId        String
+  favorite          Favorite    @relation(fields: [favoriteId], references: [id], onDelete: Cascade)
+  addedAt           DateTime    @default(now())
+
+  @@id([wishlistId, favoriteId])
+  @@map("wishlist_listings")
+}
+
+model Listing {
+  id                String      @id @default(uuid())
+  title             String
+  propertyType      String
+  description       String      @db.Text
+  price             Float
+  currency          String      @default("USD")
+  beds              Int
+  bathrooms         Float
+  category          String
+  rating            Float       @default(0)
+  reviewsCount      Int         @default(0)
+  instantBooking    Boolean     @default(false)
+  minimumStay       Int         @default(1)
+  maximumStay       Int         @default(365)
+  hostId            String
+  maxAdults         Int         @default(1)
+  maxChildren       Int         @default(0)
+  maxInfants        Int         @default(0)
+  maxPets           Int         @default(0)
+  status            String      @default("Active")
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @default(now()) @updatedAt
+  
+  // Relations
+  host              User        @relation("ListingOwner", fields: [hostId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  location          Location?
+  images            ListingImage[]
+  amenities         Amenities?
+  houseRules        HouseRule[]
+  safetyFeatures    SafetyFeature[]
+  reviews           Review[]
+  favorites         Favorite[]
+  bookings          Booking[]
+  availableDates    AvailableDate[]
+  cancellationPolicy CancellationPolicy?
+  messageThreads    MessageThread[]
+
+  @@map("listings")
+}
+
+model Location {
+  id                String      @id @default(uuid())
+  city              String
+  country           String
+  neighborhood      String?
+  latitude          Float
+  longitude         Float
+  address           String
+  
+  // Relations
+  listingId         String      @unique
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("locations")
+}
+
+model ListingImage {
+  id                String      @id @default(uuid())
+  url               String
+  caption           String?
+  isPrimary         Boolean     @default(false)
+  
+  // Relations
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("listing_images")
+}
+
+model Amenities {
+  id                String      @id @default(uuid())
+  essential         String[]
+  safety            String[]
+  outdoor           String[]
+  features          String[]
+  accessibility     String[]
+  others            String[]
+  
+  // Relations
+  listingId         String      @unique
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("amenities")
+}
+
+model AvailableDate {
+  id                String      @id @default(uuid())
+  date              DateTime
+  
+  // Relations
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([listingId, date])
+  @@map("available_dates")
+}
+
+model HouseRule {
+  id                String      @id @default(uuid())
+  rule              String
+  
+  // Relations
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("house_rules")
+}
+
+model SafetyFeature {
+  id                String      @id @default(uuid())
+  feature           String
+  
+  // Relations
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("safety_features")
+}
+
+model CancellationPolicy {
+  id                String      @id @default(uuid())
+  type              String
+  description       String      @db.Text
+  refundableUntil   DateTime
+  
+  // Relations
+  listingId         String      @unique
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("cancellation_policies")
+}
+
+model Booking {
+  id                String      @id @default(uuid())
+  status            String      // pending, approved, declined, cancelled, completed
+  checkInDate       DateTime
+  checkOutDate      DateTime
+  adults            Int
+  children          Int
+  infants           Int
+  pets              Int
+  nightlyRate       Float
+  nights            Int
+  cleaningFee       Float
+  serviceFee        Float
+  taxes             Float
+  total             Float
+  currency          String
+  paymentStatus     String      // pending, paid, refunded, partially_refunded
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  specialRequests   String?
+  contactPhone      String
+  contactEmail      String
+  hasReviewed       Boolean     @default(false)
+  
+  // Cancellation details
+  cancelledBy       String?     // guest, host, system
+  cancelledAt       DateTime?
+  cancellationReason String?
+  refundAmount      Float?
+  
+  // Relations
+  guestId           String
+  guest             User        @relation("GuestBooking", fields: [guestId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  hostId            String
+  host              User        @relation("HostBooking", fields: [hostId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  paymentMethodId   String?
+  paymentMethod     PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  reviews           Review[]
+  messageThread     MessageThread?
+
+  @@map("bookings")
+}
+
+model Review {
+  id                String      @id @default(uuid())
+  rating            Float
+  comment           String      @db.Text
+  cleanliness       Float
+  communication     Float
+  checkIn           Float
+  accuracy          Float
+  location          Float
+  value             Float
+  response          String?     @db.Text
+  responseCreatedAt DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  isPublic          Boolean     @default(true)
+  reviewType        String      // guest_to_host, host_to_guest, guest_to_listing
+  helpfulVotes      Int         @default(0)
+  reportCount       Int         @default(0)
+  isVerifiedStay    Boolean     @default(true)
+  
+  // Relations
+  userId            String      // reviewer
+  user              User        @relation("ReviewAuthor", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  receiverId        String      // for host reviews
+  receiver          User        @relation("ReviewReceiver", fields: [receiverId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  bookingId         String
+  booking           Booking     @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  photos            ReviewPhoto[]
+
+  @@map("reviews")
+}
+
+model ReviewPhoto {
+  id                String      @id @default(uuid())
+  url               String
+  
+  // Relations
+  reviewId          String
+  review            Review      @relation(fields: [reviewId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("review_photos")
+}
+
+model Message {
+  id                String      @id @default(uuid())
+  content           String      @db.Text
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @default(now()) @updatedAt
+  isRead            Boolean     @default(false)
+  
+  // Relations
+  threadId          String
+  thread            MessageThread @relation("ThreadMessages", fields: [threadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  
+  senderId          String
+  sender            User        @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  
+  recipientId       String
+  recipient         User        @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  
+  attachments       MessageAttachment[]
+  
+  // Relation for last message reference
+  threadAsLastMessage MessageThread? @relation("ThreadLastMessage")
+  
+  // Indexes for performance
+  @@index([threadId, createdAt])
+  @@index([recipientId, isRead])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id                String      @id @default(uuid())
+  type              AttachmentType
+  url               String?
+  name              String?
+  previewUrl        String?
+  fileSize          Int?
+  mimeType          String?
+  
+  // Location data (only for location type)
+  latitude          Float?
+  longitude         Float?
+  locationName      String?
+  
+  createdAt         DateTime    @default(now())
+  
+  // Relations
+  messageId         String
+  message           Message     @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  
+  @@map("message_attachments")
+}
+
+model MessageThread {
+  id                String      @id @default(uuid())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  // Last message reference (more efficient than storing text)
+  lastMessageId     String?     @unique
+  lastMessage       Message?    @relation("ThreadLastMessage", fields: [lastMessageId], references: [id])
+  
+  // Additional fields for last message info
+  lastMessageAt     DateTime?
+  lastMessageText   String?     @db.Text
+  
+  // Relations
+  participants      MessageThreadParticipant[]
+  messages          Message[]   @relation("ThreadMessages")
+  
+  // Optional relations
+  listingId         String?
+  listing           Listing?    @relation(fields: [listingId], references: [id])
+  
+  bookingId         String?     @unique
+  booking           Booking?    @relation(fields: [bookingId], references: [id])
+  
+  @@map("message_threads")
+}
+
+model MessageThreadParticipant {
+  unreadCount       Int         @default(0)
+  isArchived        Boolean     @default(false)
+  lastReadAt        DateTime?
+  joinedAt          DateTime    @default(now())
+  
+  // Relations
+  threadId          String
+  thread            MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([threadId, userId])
+  @@map("message_thread_participants")
+}
+
+// Add enum for attachment types
+enum AttachmentType {
+  IMAGE
+  DOCUMENT
+  LOCATION
+  AUDIO
+  VIDEO
+  
+  @@map("attachment_types")
+}
+
+model Notification {
+  id                String      @id @default(uuid())
+  type              String
+  message           String
+  isRead            Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  
+  // Relations
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model HostRequest {
+  id          String    @id @default(uuid())
+  hostname    String
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reason      String?   @db.Text
+  
+  // Relations
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer    User?     @relation("HostRequestReviewer", fields: [reviewedBy], references: [id])
+
+  @@map("host_requests")
+}
+
+
+model ApiLog {
+  id           Int      @id @default(autoincrement())
+  path         String
+  method       String
+  status       Int
+  responseTime Int
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent    String?
+  ipAddress    String?
+  error        String?
+  timestamp    DateTime @default(now())
+
+  @@map("api_logs")
+}
