@@ -53,7 +53,6 @@ interface RoomApiResponse {
 
 // Constants
 const CACHE_TTL = 60; // 1 minute
-const API_TIMEOUT = 5000; // 5 seconds
 
 /**
  * Skeleton loader for the room page
@@ -92,23 +91,17 @@ const RoomSkeleton = () => (
  * Fetches room data from the API with error handling and timeout
  */
 async function getRoom(id: string): Promise<Room> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/listings/${id}`,
       {
         next: { revalidate: CACHE_TTL },
-        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
         },
       }
     );
-
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
       const error = await response.json().catch(() => ({ 
         message: `Failed to fetch room (HTTP ${response.status})` 
