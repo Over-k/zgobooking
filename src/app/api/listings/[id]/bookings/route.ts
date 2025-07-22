@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = params;
+    // Await the params Promise first, then destructure
+    const { id } = await params;
+
     if (!id) {
       return NextResponse.json({ error: "Listing id is required" }, { status: 400 });
     }
+
     const bookings = await prisma.booking.findMany({
       where: {
         listingId: id,
@@ -22,9 +28,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         checkInDate: "asc",
       },
     });
+
     return NextResponse.json({ bookings });
   } catch (error) {
     console.error("Error fetching bookings for listing:", error);
     return NextResponse.json({ error: "Failed to fetch bookings for listing" }, { status: 500 });
   }
-} 
+}
