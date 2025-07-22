@@ -1,0 +1,98 @@
+services:
+  # Next.js Application (Development) - Alternative Ports
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    container_name: zgobooking-app-alt
+    restart: unless-stopped
+    ports:
+      - "3001:3000"  # Changed from 3000 to 3001
+    env_file:
+      - env.docker.dev
+    depends_on:
+      - db
+      - redis
+    networks:
+      - zgobooking-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    command: npm run dev
+
+  # PostgreSQL Database - Alternative Port
+  db:
+    image: postgres:15-alpine
+    container_name: zgobooking-postgres-alt
+    restart: always
+    ports:
+      - "5434:5432"  # Changed from 5433 to 5434
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: AtlasPostgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-data-alt:/var/lib/postgresql/data
+      - ./prisma/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - zgobooking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache - Alternative Port
+  redis:
+    image: redis:7-alpine
+    container_name: zgobooking-redis-alt
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Changed from 6379 to 6380
+    volumes:
+      - redis-data-alt:/data
+    networks:
+      - zgobooking-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prisma Studio - Alternative Port
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    container_name: zgobooking-prisma-studio-alt
+    restart: unless-stopped
+    ports:
+      - "5556:5555"  # Changed from 5555 to 5556
+    env_file:
+      - env.docker.dev
+    depends_on:
+      - db
+    networks:
+      - zgobooking-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npx prisma studio --hostname 0.0.0.0 --port 5555
+
+volumes:
+  postgres-data-alt:
+    driver: local
+  redis-data-alt:
+    driver: local
+
+networks:
+  zgobooking-network:
+    driver: bridge 

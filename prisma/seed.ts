@@ -7,7 +7,8 @@ import { mockReviews } from '../src/data/reviews.js';
 import { mockMessageThreads, mockMessages, mockMessageThreadParticipants, mockMessageAttachments} from '../src/data/messages.js';
 import { mockFavorites } from '../src/data/favorites.js';
 import { mockPaymentMethods } from '../src/data/paymentMethods.js';
-
+import { mockHostRequests } from '../src/data/hostRequests.js';
+import { mockNotifications } from '../src/data/notifications.js';
 const prisma = new PrismaClient();
 
 // Configure Cloudinary with enhanced timeout and retry settings
@@ -21,23 +22,47 @@ cloudinary.config({
 
 // Enhanced image upload function with retries
 async function uploadImageToCloudinary(imageUrl: string, retries = 3): Promise<string> {
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    console.log('Cloudinary credentials not found, using original image URL');
+  // Check if Cloudinary credentials are properly set
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    console.log(`⚠️ Cloudinary credentials missing. Using original URL: ${imageUrl}`);
+    console.log(`   CLOUDINARY_CLOUD_NAME: ${cloudName || 'NOT SET'}`);
+    console.log(`   CLOUDINARY_API_KEY: ${apiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`   CLOUDINARY_API_SECRET: ${apiSecret ? 'SET' : 'NOT SET'}`);
+    return imageUrl;
+  }
+
+  // Check if credentials are still placeholder values
+  if (cloudName === 'your-cloud-name' || apiKey === 'your-api-key' || apiSecret === 'your-api-secret') {
+    console.log(`⚠️ Cloudinary credentials are placeholder values. Using original URL: ${imageUrl}`);
     return imageUrl;
   }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      console.log(`📤 Uploading image to Cloudinary (attempt ${attempt}/${retries}): ${imageUrl}`);
       const result = await cloudinary.uploader.upload(imageUrl);
+      console.log(`✅ Successfully uploaded to Cloudinary: ${result.secure_url}`);
       return result.secure_url;
-    } catch (error) {
-      console.error(`Attempt ${attempt} failed to upload image ${imageUrl}:`, error);
+    } catch (error: any) {
+      console.error(`❌ Attempt ${attempt} failed to upload image ${imageUrl}:`, {
+        error: error.message || error,
+        http_code: error.http_code,
+        name: error.name
+      });
+      
       if (attempt === retries) {
-        console.log(`Using original URL after ${retries} failed attempts`);
+        console.log(`⚠️ Using original URL after ${retries} failed attempts: ${imageUrl}`);
         return imageUrl;
       }
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+      
+      // Wait before retrying (exponential backoff)
+      const waitTime = 2000 * Math.pow(2, attempt - 1);
+      console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
   return imageUrl;
@@ -67,25 +92,96 @@ async function clearDatabase(): Promise<void> {
   console.log('Clearing existing data...');
   
   try {
-    // Delete data in reverse order of dependencies
-    await prisma.$transaction([
-      prisma.messageAttachment.deleteMany(),
-      prisma.messageThreadParticipant.deleteMany(),
-      prisma.message.deleteMany(),
-      prisma.messageThread.deleteMany(),
-      prisma.reviewPhoto.deleteMany(),
-      prisma.review.deleteMany(),
-      prisma.booking.deleteMany(),
-      prisma.favorite.deleteMany(),
-      prisma.wishlistListing.deleteMany(),
-      prisma.wishlist.deleteMany(),
-      prisma.listingImage.deleteMany(),
-      prisma.listing.deleteMany(),
-      prisma.paymentMethod.deleteMany(),
-      prisma.user.deleteMany(),
-    ]);
+    // Check if tables exist before trying to delete from them
+    const tablesToCheck = [
+      'message_attachments',
+      'message_thread_participants', 
+      'messages',
+      'message_threads',
+      'review_photos',
+      'reviews',
+      'bookings',
+      'favorites',
+      'wishlist_listings',
+      'wishlists',
+      'listing_images',
+      'listings',
+      'payment_methods',
+      'host_requests',
+      'users',
+      'notifications'
+    ];
+
+    // Build delete operations only for existing tables
+    const deleteOperations = [];
     
-    console.log('Database cleared successfully');
+    for (const table of tablesToCheck) {
+      try {
+        // Try to check if table exists by doing a simple query
+        await prisma.$queryRawUnsafe(`SELECT 1 FROM "${table}" LIMIT 1`);
+        // If we get here, table exists, so add delete operation
+        switch (table) {
+          case 'message_attachments':
+            deleteOperations.push(prisma.messageAttachment.deleteMany());
+            break;
+          case 'message_thread_participants':
+            deleteOperations.push(prisma.messageThreadParticipant.deleteMany());
+            break;
+          case 'messages':
+            deleteOperations.push(prisma.message.deleteMany());
+            break;
+          case 'message_threads':
+            deleteOperations.push(prisma.messageThread.deleteMany());
+            break;
+          case 'review_photos':
+            deleteOperations.push(prisma.reviewPhoto.deleteMany());
+            break;
+          case 'reviews':
+            deleteOperations.push(prisma.review.deleteMany());
+            break;
+          case 'bookings':
+            deleteOperations.push(prisma.booking.deleteMany());
+            break;
+          case 'favorites':
+            deleteOperations.push(prisma.favorite.deleteMany());
+            break;
+          case 'wishlist_listings':
+            deleteOperations.push(prisma.wishlistListing.deleteMany());
+            break;
+          case 'wishlists':
+            deleteOperations.push(prisma.wishlist.deleteMany());
+            break;
+          case 'listing_images':
+            deleteOperations.push(prisma.listingImage.deleteMany());
+            break;
+          case 'listings':
+            deleteOperations.push(prisma.listing.deleteMany());
+            break;
+          case 'payment_methods':
+            deleteOperations.push(prisma.paymentMethod.deleteMany());
+            break;
+          case 'host_requests':
+            deleteOperations.push(prisma.hostRequest.deleteMany());
+            break;
+          case 'users':
+            deleteOperations.push(prisma.user.deleteMany());
+            break;
+          case 'notifications':
+            deleteOperations.push(prisma.notification.deleteMany());
+            break;
+        }
+        console.log(`✅ Table ${table} exists, will be cleared`);
+      } catch (error) {
+        console.log(`⚠️ Table ${table} does not exist, skipping`);
+      }
+    }
+
+    if (deleteOperations.length > 0) {
+      await prisma.$transaction(deleteOperations);
+      console.log('Database cleared successfully');
+    } else {
+      console.log('No existing tables found to clear');
+    }
   } catch (error) {
     console.error('Error clearing database:', error);
     throw error;
@@ -265,6 +361,23 @@ async function seedPaymentMethods(): Promise<void> {
   console.log(`Successfully seeded ${mockPaymentMethods.length} payment methods`);
 }
 
+async function seedHostRequests(): Promise<void> {
+  console.log('Seeding host requests...');
+  
+  const batchProcessor = async (requestBatch: typeof mockHostRequests) => {
+    await prisma.hostRequest.createMany({
+      data: requestBatch.map(request => ({
+        ...request,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })),
+      skipDuplicates: true
+    });
+  };
+  
+  await processInBatches(mockHostRequests, 20, batchProcessor, 'host requests');
+  console.log(`Successfully seeded ${mockHostRequests.length} host requests`);
+}
 async function seedBookings(): Promise<void> {
   console.log('Seeding bookings...');
   
@@ -552,6 +665,22 @@ async function seedFavorites(): Promise<void> {
   console.log(`Successfully seeded ${uniqueFavorites.length} favorites`);
 }
 
+async function seedNotifications(): Promise<void> {
+  console.log('Seeding notifications...');
+  await prisma.notification.createMany({
+    data: mockNotifications.map(n => ({
+      id: n.id,
+      type: n.type,
+      message: n.message,
+      isRead: n.isRead,
+      createdAt: n.createdAt,
+      userId: n.userId
+    })),
+    skipDuplicates: true
+  });
+  console.log(`Successfully seeded ${mockNotifications.length} notifications`);
+}
+
 // Main seeding function
 async function main(): Promise<void> {
   console.log('Starting database seeding...');
@@ -563,7 +692,9 @@ async function main(): Promise<void> {
 
     // Seed data in dependency order
     await seedUsers();
+    await seedNotifications();
     await seedPaymentMethods();
+    await seedHostRequests();
     await seedListings();
     await seedBookings();
     await seedReviews();
@@ -586,6 +717,7 @@ async function main(): Promise<void> {
       prisma.messageThreadParticipant.count(),
       prisma.messageAttachment.count(),
       prisma.favorite.count(),
+      prisma.notification.count()
     ]);
 
     console.log('\nSeeding Summary:');
@@ -598,6 +730,7 @@ async function main(): Promise<void> {
     console.log(`- Thread Participants: ${counts[6]}`);
     console.log(`- Message Attachments: ${counts[7]}`);
     console.log(`- Favorites: ${counts[8]}`);
+    console.log(`- Notifications: ${counts[9]}`);
 
   } catch (error) {
     console.error('Error during seeding:', error);

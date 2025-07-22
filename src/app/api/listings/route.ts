@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 export async function GET(request: Request) {
   try {
     const listings = await prisma.listing.findMany({
-      take: 20,
+      take: 12,
       include: {
         location: true,
         images: true,

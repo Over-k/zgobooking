@@ -19,6 +19,8 @@ const createBookingSchema = z.object({
   contactPhone: z.string().optional(),
   contactEmail: z.string().email(),
   specialRequests: z.string().optional(),
+  paymentMethodId: z.string().nullable().optional(), // <-- added
+  paymentType: z.enum(["card", "paypal", "p2p"]).optional(), // <-- added
 });
 
 // GET /api/bookings - Get all bookings for the authenticated user
@@ -102,10 +104,44 @@ export async function POST(request: Request) {
       );
     }
 
+    // Prevent double bookings: check for overlapping bookings
+    const overlappingBooking = await prisma.booking.findFirst({
+      where: {
+        listingId: validatedData.listingId,
+        status: { not: "cancelled" }, // ignore cancelled bookings
+        checkInDate: { lte: new Date(validatedData.checkOutDate) },
+        checkOutDate: { gte: new Date(validatedData.checkInDate) },
+      },
+    });
+    if (overlappingBooking) {
+      return NextResponse.json(
+        { error: "This listing is already booked for the selected dates." },
+        { status: 409 }
+      );
+    }
+
     const nights = Math.ceil(
       (new Date(validatedData.checkOutDate).getTime() -
         new Date(validatedData.checkInDate).getTime()) / (1000 * 60 * 60 * 24)
     );
+
+    // Payment method validation
+    let paymentMethodId: string | null = null;
+    if (validatedData.paymentType === "p2p" || !validatedData.paymentMethodId) {
+      paymentMethodId = null;
+    } else if (validatedData.paymentMethodId) {
+      // Validate the payment method belongs to the user
+      const paymentMethod = await prisma.paymentMethod.findUnique({
+        where: { id: validatedData.paymentMethodId },
+      });
+      if (!paymentMethod || paymentMethod.userId !== user.id) {
+        return NextResponse.json(
+          { error: "Invalid payment method" },
+          { status: 400 }
+        );
+      }
+      paymentMethodId = validatedData.paymentMethodId;
+    }
 
     const bookingData = {
       listingId: validatedData.listingId,
@@ -129,9 +165,10 @@ export async function POST(request: Request) {
       currency: "USD",
       specialRequests: validatedData.specialRequests || "",
       status: "pending",
-      paymentStatus: "pending",
+      paymentStatus: validatedData.paymentType === "p2p" ? "pending" : "pending", // can be extended for paid
       contactPhone: validatedData.contactPhone || "",
-      contactEmail: validatedData.contactEmail
+      contactEmail: validatedData.contactEmail,
+      paymentMethodId: paymentMethodId, // <-- added
     };
 
     const booking = await prisma.booking.create({
@@ -143,6 +180,14 @@ export async function POST(request: Request) {
             images: true,
           },
         },
+      },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: booking.hostId,
+        type: 'booking_request',
+        message: `You have received a new booking request from ${session?.user?.firstName} for ${booking.listing.title}.`,
+        isRead: false,
       },
     });
 

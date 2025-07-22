@@ -143,3 +143,52 @@ export interface Listing {
     dates?: string; // for display purposes
     nights?: number; // for display purposes
 }
+
+export interface TrendingListing {
+  id: string;
+  title: string;
+  propertyType: string;
+  description: string;
+  price: number;
+  currency: string;
+  beds: number;
+  bathrooms: number;
+  category: string;
+  rating: number;
+  reviewsCount: number;
+  instantBooking: boolean;
+  minimumStay: number;
+  maximumStay: number;
+  hostId: string;
+  maxAdults: number;
+  maxChildren: number;
+  maxInfants: number;
+  maxPets: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  location: {
+    id: string;
+    city: string;
+    country: string;
+    neighborhood?: string;
+    latitude: number;
+    longitude: number;
+    address: string;
+  } | null;
+  images: {
+    id: string;
+    url: string;
+    caption?: string;
+    isPrimary: boolean;
+  }[];
+  host: {
+    firstName: string;
+    lastName: string;
+    profileImage: string;
+  };
+  _count: {
+    bookings: number;
+    reviews: number;
+  };
+}

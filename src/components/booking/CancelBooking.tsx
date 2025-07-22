@@ -19,6 +19,7 @@ export default function CancelBooking({booking}: {booking: BookingWithRelations}
     const [cancellationReason, setCancellationReason] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [canceled, setCanceled] = useState(false);
     const [isCancelLoading, setIsCancelLoading] = useState<string | null>(null);
     
     if (!booking) return null;
@@ -67,6 +68,8 @@ export default function CancelBooking({booking}: {booking: BookingWithRelations}
         }
         const result = await response.json();
         toast.success(result.message);
+         setShowConfirmation(false);
+         setCanceled(true);
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -121,7 +124,7 @@ export default function CancelBooking({booking}: {booking: BookingWithRelations}
     
         if (!showConfirmation) {
           return (
-                                <Dialog >
+                  <Dialog >
                       <DialogTrigger asChild>
                     <Button
                       variant="outline"
@@ -275,13 +278,14 @@ export default function CancelBooking({booking}: {booking: BookingWithRelations}
                   Continue Cancellation
                 </Button>
               </DialogFooter>
-                                  </DialogContent>
-                    </Dialog>
+            </DialogContent>
+          </Dialog>
           );
         }
     
         // Confirmation step
-        return (
+        if(showConfirmation && !canceled){
+          return (
                               <Dialog >
                       <DialogTrigger asChild>
                     <Button
@@ -337,7 +341,7 @@ export default function CancelBooking({booking}: {booking: BookingWithRelations}
                 {isSubmitting ? "Cancelling..." : "Yes, Cancel Booking"}
               </Button>
             </DialogFooter>
-                                </DialogContent>
-                    </Dialog>
-        );
+          </DialogContent>
+        </Dialog>
+  );}
 };

@@ -56,6 +56,7 @@ export const ListingsGrid = () => {
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [isLoadingAllListings, setIsLoadingAllListings] = useState(true);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [hasShuffled, setHasShuffled] = useState(false);
 
   // Fetch all listings on component mount
   useEffect(() => {
@@ -65,10 +66,7 @@ export const ListingsGrid = () => {
         const response = await fetch("/api/listings");
         if (!response.ok) throw new Error("Failed to fetch listings");
         const data = await response.json();
-        const shuffledData = Array.isArray(data)
-          ? [...data].sort(() => Math.random() - 0.5)
-          : [];
-        setAllListings(shuffledData);
+        setAllListings(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching all listings:", error);
         setAllListings([]);
@@ -79,8 +77,18 @@ export const ListingsGrid = () => {
 
     if (!isSearchActive) {
       fetchAllListings();
+      setHasShuffled(false); // Reset shuffle flag when fetching new listings
     }
   }, [isSearchActive]);
+
+  // Shuffle listings on client only after mount
+  useEffect(() => {
+    if (!isSearchActive && allListings.length > 0 && !hasShuffled) {
+      setAllListings((prev) => [...prev].sort(() => Math.random() - 0.5));
+      setHasShuffled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allListings, isSearchActive, hasShuffled]);
 
   // Execute search function
   const executeSearch = async () => {

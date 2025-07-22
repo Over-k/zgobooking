@@ -1,0 +1,98 @@
+services:
+  # Next.js Application (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    container_name: zgobooking-app-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - env.docker.dev
+    depends_on:
+      - db
+      - redis
+    networks:
+      - zgobooking-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    command: npm run dev
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: zgobooking-postgres-dev
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: AtlasPostgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+      - ./prisma/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - zgobooking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: zgobooking-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data-dev:/data
+    networks:
+      - zgobooking-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prisma Studio (Optional - for database management)
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    container_name: zgobooking-prisma-studio
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    env_file:
+      - env.docker.dev
+    depends_on:
+      - db
+    networks:
+      - zgobooking-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npx prisma studio --hostname 0.0.0.0 --port 5555
+
+volumes:
+  postgres-data-dev:
+    driver: local
+  redis-data-dev:
+    driver: local
+
+networks:
+  zgobooking-network:
+    driver: bridge 

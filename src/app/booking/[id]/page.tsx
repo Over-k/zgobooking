@@ -92,7 +92,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
     };
 
     fetchRoomData();
-  }, [id, setListing, checkInDate, checkOutDate, guests, setCheckInDate, setCheckOutDate, setGuests, setContactInfo]);
+  }, [id, setListing, guests, setCheckInDate, setCheckOutDate, setGuests, setContactInfo]);
 
 
   if (isLoading) return <BookingSkeleton />;

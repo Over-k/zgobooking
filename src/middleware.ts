@@ -8,18 +8,47 @@ const EXCLUDED_API_ROUTES = [
   '/api/admin/system/status'
 ];
 
+// Define protected paths that require authentication
+const PROTECTED_PATHS = [
+  '/booking/',
+  '/accounts/',
+  '/messages/',
+  '/notification/',
+  '/dashboard/'
+];
+
 export async function middleware(request: NextRequestWithAuth) {
   const token = await getToken({ req: request });
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth');
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+  const pathname = request.nextUrl.pathname;
+
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isApiRoute = pathname.startsWith('/api');
   const isExcludedApiRoute = EXCLUDED_API_ROUTES.some(route =>
-    request.nextUrl.pathname.startsWith(route)
+    pathname.startsWith(route)
   );
 
+  // Check if current path is a protected route
+  const isProtectedPath = PROTECTED_PATHS.some(path => {
+    if (path.endsWith('/')) {
+      // For paths ending with /, match the path and any subpaths
+      return pathname.startsWith(path) || pathname === path.slice(0, -1);
+    }
+    return pathname.startsWith(path);
+  });
+
   // Additional check to exclude stats requests
-  const isStatsRequest = request.nextUrl.pathname === '/api/admin/system/log' &&
+  const isStatsRequest = pathname === '/api/admin/system/log' &&
     request.nextUrl.searchParams.get('stats') === 'true';
+
+  // Handle protected paths - require authentication
+  if (isProtectedPath) {
+    if (!token) {
+      const url = new URL('/auth/signin', request.url);
+      url.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Handle admin routes
   if (isAdminRoute) {
@@ -56,7 +85,7 @@ export async function middleware(request: NextRequestWithAuth) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        path: request.nextUrl.pathname,
+        path: pathname,
         method: request.method,
         status: response.status,
         responseTime,
@@ -76,5 +105,14 @@ export async function middleware(request: NextRequestWithAuth) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/auth/:path*', '/api/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/auth/:path*',
+    '/api/:path*',
+    '/booking/:path*',
+    '/accounts/:path*',
+    '/messages/:path*',
+    '/notifications/:path*',
+    '/dashboard/:path*'
+  ],
 };
