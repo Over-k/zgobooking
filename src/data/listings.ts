@@ -18,7 +18,7 @@ export const mockListings: ListingWithImages[] = [
           id: "listing-1",
           createdAt: new Date(),
           updatedAt: new Date(),
-          title: "Luxury Mountain Resort",
+          title: "Hôtel Mechouar Plaza",
           propertyType: "Resort",
           description: "Experience the ultimate luxury getaway at our stunning mountain resort. Nestled in the heart of breathtaking mountain scenery, this resort offers world-class amenities and unparalleled comfort.",
           price: 350.00,
@@ -39,14 +39,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-1",
           images:[
             {
-              url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d",
+              url: "/images/listings/listing-1-1.jpg",
               caption: "Luxurious bedroom",
               listingId: "listing-1",
               isPrimary: false,
               id: "img2",
             },
             {
-              url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+              url: "/images/listings/listing-1-2.jpg",
               caption: "Natural surroundings",
               listingId: "listing-1",
               isPrimary: false,
@@ -106,14 +106,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-2",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1487730116645-74489c95b41b",
+              url: "/images/listings/listing-2-1.jpg",
               caption: "Campfire area",
               listingId: "listing-2",
               id: "img3",
               isPrimary: false,
             },
             {
-              url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+              url: "/images/listings/listing-2-2.jpg",
               caption: "Desert sunset view",
               listingId: "listing-2",
               id: "img4",
@@ -194,14 +194,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-4",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+              url: "/images/listings/listing-3-1.jpg",
               caption: "Cozy interior living space",
               listingId: "listing-3",
               id: "img6",
               isPrimary: false,
             },
             {
-              url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+              url: "/images/listings/listing-3-2.jpg",
               caption: "Scenic parking location",
               listingId: "listing-3",
               id: "img7",
@@ -261,14 +261,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-6",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+              url: "/images/listings/listing-4-1.jpg",
               caption: "Peaceful forest trail",
               listingId: "listing-4",
               id: "img9",
               isPrimary: false,
             },
             {
-              url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+              url: "/images/listings/listing-4-2.jpg",
               caption: "Natural surroundings",
               listingId: "listing-4",
               id: "img10",
@@ -328,14 +328,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-8",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461",
+              url: "/images/listings/listing-5-1.jpg",
               caption: "Modern hotel room",
               listingId: "listing-5",
               id: "img11",
               isPrimary: false,
             },
             {
-              url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d",
+              url: "/images/listings/listing-5-2.jpg",
               caption: "Luxury bathroom",
               listingId: "listing-5",
               id: "img12",
@@ -395,14 +395,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-1",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1487730116645-74489c95b41b",
+              url: "/images/listings/listing-6-1.jpg",
               caption: "Campfire gathering area",
               listingId: "listing-6",
               id: "img13",
               isPrimary: false,
             },
             {
-              url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+              url: "/images/listings/listing-6-2.jpg",
               caption: "Natural playground",
               listingId: "listing-6",
               id: "img14",
@@ -462,14 +462,14 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-2",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+              url: "/images/listings/listing-7-1.jpg",
               caption: "Spacious interior",
               listingId: "listing-7",
               id: "img15",
               isPrimary: false,
             },
             {
-              url: "https://images.unsplash.com/photo-1504639725590-34d0984388bd",
+              url: "/images/listings/listing-7-2.jpg",
               caption: "Fully equipped kitchen",
               listingId: "listing-7",
               id: "img16",
@@ -529,14 +529,7 @@ export const mockListings: ListingWithImages[] = [
           hostId: "user-4",
           images: [
             {
-              url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-              caption: "Sunrise view",
-              listingId: "listing-8",
-              id: "img19",
-              isPrimary: false,
-            },
-            {
-              url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b",
+              url: "/images/listings/listing-8-1.jpg",
               caption: "Natural seating area",
               listingId: "listing-8",
               id: "img18",
@@ -596,14 +589,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-5",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1555215695-3004980ad54e",
+        url: "/images/listings/listing-9-1.jpg",
         caption: "Exterior view",
         listingId: "listing-9",
         id: "img20",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1549924231-f129b911e442",
+        url: "/images/listings/listing-9-2.jpg",
         caption: "Interior dashboard",
         listingId: "listing-9",
         id: "img21",
@@ -663,14 +656,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-6",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa",
+        url: "/images/listings/listing-10-1.jpg",
         caption: "Hotel suite bedroom",
         listingId: "listing-10",
         id: "img22",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461",
+        url: "/images/listings/listing-10-2.jpg",
         caption: "City view from balcony",
         listingId: "listing-10",
         id: "img23",
@@ -730,14 +723,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-7",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
+        url: "/images/listings/listing-11-1.jpg",
         caption: "Airstream exterior",
         listingId: "listing-11",
         id: "img24",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+        url: "/images/listings/listing-11-2.jpg",
         caption: "Cozy interior",
         listingId: "listing-11",
         id: "img25",
@@ -797,14 +790,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-8",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1504851149312-7a075b496cc7",
+        url: "/images/listings/listing-12-1.jpg",
         caption: "Campsite by the river",
         listingId: "listing-12",
         id: "img26",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1542332213-31f87348057f",
+        url: "/images/listings/listing-12-2.jpg",
         caption: "Fire pit area",
         listingId: "listing-12",
         id: "img27",
@@ -864,14 +857,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-9",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1500534623283-312aade485b7",
+        url: "/images/listings/listing-13-1.jpg",
         caption: "Lighthouse at sunset",
         listingId: "listing-13",
         id: "img28",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5",
+        url: "/images/listings/listing-13-2.jpg",
         caption: "Coastal cliff view",
         listingId: "listing-13",
         id: "img29",
@@ -931,14 +924,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-10",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1503376780353-7e6692767b70",
+        url: "/images/listings/listing-14-1.jpg",
         caption: "Red convertible",
         listingId: "listing-14",
         id: "img30",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7",
+        url: "/images/listings/listing-14-2.jpg",
         caption: "Interior leather seats",
         listingId: "listing-14",
         id: "img31",
@@ -998,14 +991,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-11",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d",
+        url: "/images/listings/listing-15-1.jpg",
         caption: "Mountain resort exterior",
         listingId: "listing-15",
         id: "img32",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b",
+        url: "/images/listings/listing-15-2.jpg",
         caption: "Spa and wellness area",
         listingId: "listing-15",
         id: "img33",
@@ -1065,14 +1058,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-12",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+        url: "/images/listings/listing-16-1.jpg",
         caption: "Luxury RV exterior",
         listingId: "listing-16",
         id: "img34",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1537225228614-56CC3556D7ED",
+        url: "/images/listings/listing-16-2.jpg",
         caption: "Modern RV interior",
         listingId: "listing-16",
         id: "img35",
@@ -1132,14 +1125,7 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-13",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1537225228614-56cc3556d7ed",
-        caption: "Glamping tent in forest",
-        listingId: "listing-17",
-        id: "img36",
-        isPrimary: true,
-      },
-      {
-        url: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29",
+        url: "/images/listings/listing-17-1.jpg",
         caption: "Forest canopy view",
         listingId: "listing-17",
         id: "img37",
@@ -1199,14 +1185,14 @@ export const mockListings: ListingWithImages[] = [
     hostId: "user-14",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+        url: "/images/listings/listing-18-1.jpg",
         caption: "Majestic waterfall",
         listingId: "listing-18",
         id: "img38",
         isPrimary: true,
       },
       {
-        url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+        url: "/images/listings/listing-18-2.jpg",
         caption: "Hiking trail approach",
         listingId: "listing-18",
         id: "img39",

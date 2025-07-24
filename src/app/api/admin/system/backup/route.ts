@@ -69,13 +69,13 @@ export async function POST() {
 
     // Create backup using a temporary file in the container
     const tempBackupFile = `/tmp/backup-${timestamp}.sql`
-    await execAsync(`docker exec atlas-postgres pg_dump -U postgres -F p -f "${tempBackupFile}"`)
+    await execAsync(`docker exec zgobooking-postgres-dev pg_dump -U postgres -F p -f "${tempBackupFile}"`)
     
     // Copy the backup file from the container to the host
-    await execAsync(`docker cp atlas-postgres:${tempBackupFile} "${backupFile}"`)
+    await execAsync(`docker cp zgobooking-postgres-dev:${tempBackupFile} "${backupFile}"`)
     
     // Clean up the temporary file in the container
-    await execAsync(`docker exec atlas-postgres rm ${tempBackupFile}`)
+    await execAsync(`docker exec zgobooking-postgres-dev rm ${tempBackupFile}`)
 
     // Compress backup
     await pipeline(
@@ -87,9 +87,9 @@ export async function POST() {
     // Verify backup
     try {
       const tempVerifyFile = `/tmp/verify-${timestamp}.sql`
-      await execAsync(`docker cp "${backupFile}" atlas-postgres:${tempVerifyFile}`)
-      await execAsync(`docker exec atlas-postgres psql -U postgres -c "SELECT 1" -f "${tempVerifyFile}"`)
-      await execAsync(`docker exec atlas-postgres rm ${tempVerifyFile}`)
+      await execAsync(`docker cp "${backupFile}" zgobooking-postgres-dev:${tempVerifyFile}`)
+      await execAsync(`docker exec zgobooking-postgres-dev psql -U postgres -c "SELECT 1" -f "${tempVerifyFile}"`)
+      await execAsync(`docker exec zgobooking-postgres-dev rm ${tempVerifyFile}`)
     } catch (error) {
       console.error('Backup verification failed:', error)
       // Clean up failed backup
@@ -162,13 +162,13 @@ export async function PUT(request: Request) {
       }
 
       // Copy the file to the container first
-      await execAsync(`docker cp "${tempFile}" atlas-postgres:${containerTempFile}`)
+      await execAsync(`docker cp "${tempFile}" zgobooking-postgres-dev:${containerTempFile}`)
 
       // Restore backup using the container's path
-      await execAsync(`docker exec atlas-postgres psql -U postgres -f "${containerTempFile}"`)
+      await execAsync(`docker exec zgobooking-postgres-dev psql -U postgres -f "${containerTempFile}"`)
 
       // Clean up
-      await execAsync(`docker exec atlas-postgres rm ${containerTempFile}`)
+      await execAsync(`docker exec zgobooking-postgres-dev rm ${containerTempFile}`)
       if (fs.existsSync(tempFile)) {
         fs.unlinkSync(tempFile)
       }
@@ -177,7 +177,7 @@ export async function PUT(request: Request) {
     } catch (error) {
       // Clean up on error
       try {
-        await execAsync(`docker exec atlas-postgres rm ${containerTempFile}`)
+        await execAsync(`docker exec zgobooking-postgres-dev rm ${containerTempFile}`)
       } catch (e) {
         // Ignore cleanup errors
       }

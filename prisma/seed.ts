@@ -22,6 +22,10 @@ cloudinary.config({
 
 // Enhanced image upload function with retries
 async function uploadImageToCloudinary(imageUrl: string, retries = 3): Promise<string> {
+  if (imageUrl.startsWith('/images/')){
+    console.log(`⚠️ Using original URL: ${imageUrl}`);
+    return imageUrl;
+  }
   // Check if Cloudinary credentials are properly set
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;

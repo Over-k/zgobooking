@@ -4,8 +4,8 @@ import { NextRequestWithAuth } from 'next-auth/middleware';
 
 // Define excluded API routes that shouldn't be logged
 const EXCLUDED_API_ROUTES = [
-  '/api/admin/system/log',
-  '/api/admin/system/status'
+  '/api/admin/',
+  '/api/analytics/',
 ];
 
 // Define protected paths that require authentication

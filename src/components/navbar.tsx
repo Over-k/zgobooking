@@ -14,7 +14,9 @@ export default function Navbar() {
           <div className="hidden items-center gap-4 lg:flex">
             <UserMenu />
           </div>
-          <SheetMenu />
+          <div className="ml-auto lg:hidden">
+            <SheetMenu />
+          </div>
         </nav>
         <Categories />
       </div>

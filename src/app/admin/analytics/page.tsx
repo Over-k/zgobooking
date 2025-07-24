@@ -106,11 +106,11 @@ export default function AnalyticsPage() {
   const handleTimeRangeChange = (newRange: TimeRange) => {
     setTimeRange(newRange);
     fetchAnalytics(false, newRange);
-  };
+  }; 
 
   useEffect(() => {
     fetchAnalytics();
-  }, [fetchAnalytics]);
+  }, []);
 
   // Calculate totals for stats cards
   const calculateTotal = (data: MonthlyData[]) => {
